@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">JIM</string>
+    <string name="about">
+        参照手机QQ7.1.5版本界面部分原型开发
+        \n仅用作技术交流
+        \nicon均来源于阿里巴巴矢量图
+        \n项目源码地址：
+        \n https://github.com/wapchief/Android-IM
+    </string>
+    <string name="textview">TextView</string>
+    <string name="button">Button</string>
+    <string name="rationale_record_voice">This app needs access microphone to record voice.</string>
+    <string name="rationale_photo">This app needs access photos.</string>
+    <string name="rationale_camera">This app needs access camera.</string>
+</resources>

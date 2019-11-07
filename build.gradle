@@ -1,0 +1,78 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.jakewharton.butterknife'
+
+def keystorePropertiesFile = rootProject.file("gradle.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "28.0.3"
+
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        ndk {
+            //选择要添加的对应cpu类型的.so库。
+            abiFilters 'armeabi','mips','mips64'
+            // 还可以添加 'x86', 'x86_64', 'mips', 'mips64'
+        }
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [
+                        "androidManifestFile": "$projectDir/src/main/AndroidManifest.xml".toString()
+                ]
+            }
+        }
+//        manifestPlaceholders = [
+//                JPUSH_PKGNAME : keystoreProperties['appId'],
+//                JPUSH_APPKEY : "ce32ecb091e956f51867a423", //JPush上注册的包名对应的appkey.
+//                JPUSH_CHANNEL : "developer-default", //暂时填写默认值即可.
+//        ]
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    api 'cn.jiguang.sdk:jpush:3.3.6'
+    api 'cn.jiguang.sdk:jmessage:2.9.0'  // 此处以JMessage 2.9.0 版本为例。
+    api 'cn.jiguang.sdk:jcore:2.0.0'  // 此处以JCore 2.0.0 版本为例。
+    api project(path: ':farwolf.weex')
+//    api 'com.github.jpush:aurora-imui:0.14.0'
+    api 'cn.jiguang.imui:messagelist:0.8.0'
+    api 'cn.jiguang.imui:chatinput:0.10.0'
+
+    api 'com.jakewharton:butterknife:10.2.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.0'
+
+    //网络访问
+    api 'com.squareup.retrofit2:retrofit:2.3.0'
+    api 'com.squareup.retrofit2:converter-gson:2.3.0'
+
+    //工具类
+    api 'com.blankj:utilcode:1.13.4'
+
+    api 'com.bigkoo:svprogresshud:1.0.6'
+
+    api 'com.flyco.tablayout:FlycoTabLayout_Lib:2.0.0@aar'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+}
