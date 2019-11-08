@@ -3,6 +3,8 @@ package com.weexplus.jim.activity;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.view.PagerAdapter;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LruCache;
@@ -10,8 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import androidx.annotation.Nullable;
-import androidx.viewpager.widget.PagerAdapter;
+//import androidx.annotation.Nullable;
+//import androidx.viewpager.widget.PagerAdapter;
 
 import java.io.File;
 import java.util.ArrayList;

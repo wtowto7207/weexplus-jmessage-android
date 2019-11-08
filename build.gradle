@@ -1,18 +1,19 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.jakewharton.butterknife'
+//apply plugin: 'com.jakewharton.butterknife'
 
+def AAVersion='4.5.2'
 def keystorePropertiesFile = rootProject.file("gradle.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "28.0.3"
+    compileSdkVersion 26
+    buildToolsVersion "28.0.2"
 
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 29
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
 
@@ -21,18 +22,20 @@ android {
             abiFilters 'armeabi','mips','mips64'
             // 还可以添加 'x86', 'x86_64', 'mips', 'mips64'
         }
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        //添加如下配置就OK了
+        javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
         consumerProguardFiles 'consumer-rules.pro'
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments = [
-                        "androidManifestFile": "$projectDir/src/main/AndroidManifest.xml".toString()
-                ]
-            }
-        }
+//        javaCompileOptions {
+//            annotationProcessorOptions {
+//                arguments = [
+//                        "androidManifestFile": "$projectDir/src/main/AndroidManifest.xml".toString()
+//                ]
+//            }
+//        }
 //        manifestPlaceholders = [
 //                JPUSH_PKGNAME : keystoreProperties['appId'],
-//                JPUSH_APPKEY : "ce32ecb091e956f51867a423", //JPush上注册的包名对应的appkey.
+//                JPUSH_APPKEY : "8b6f6fa6828662599492986e", //JPush上注册的包名对应的appkey.
 //                JPUSH_CHANNEL : "developer-default", //暂时填写默认值即可.
 //        ]
     }
@@ -49,24 +52,26 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+//    implementation 'androidx.appcompat:appcompat:1.1.0'
+    annotationProcessor "org.androidannotations:androidannotations:$AAVersion"
+    api "org.androidannotations:androidannotations-api:$AAVersion"
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    api 'cn.jiguang.sdk:jpush:3.3.6'
+//    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+//    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+//    api 'cn.jiguang.sdk:jpush:3.3.6'
     api 'cn.jiguang.sdk:jmessage:2.9.0'  // 此处以JMessage 2.9.0 版本为例。
-    api 'cn.jiguang.sdk:jcore:2.0.0'  // 此处以JCore 2.0.0 版本为例。
+//    api 'cn.jiguang.sdk:jcore:2.0.0'  // 此处以JCore 2.0.0 版本为例。
     api project(path: ':farwolf.weex')
 //    api 'com.github.jpush:aurora-imui:0.14.0'
     api 'cn.jiguang.imui:messagelist:0.8.0'
     api 'cn.jiguang.imui:chatinput:0.10.0'
 
-    api 'com.jakewharton:butterknife:10.2.0'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.0'
+//    api 'com.jakewharton:butterknife:9.0.0'
+//    annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0'
 
     //网络访问
-    api 'com.squareup.retrofit2:retrofit:2.3.0'
-    api 'com.squareup.retrofit2:converter-gson:2.3.0'
+    api 'com.squareup.retrofit2:retrofit:2.1.0'
+    api 'com.squareup.retrofit2:converter-gson:2.1.0'
 
     //工具类
     api 'com.blankj:utilcode:1.13.4'
@@ -74,5 +79,6 @@ dependencies {
     api 'com.bigkoo:svprogresshud:1.0.6'
 
     api 'com.flyco.tablayout:FlycoTabLayout_Lib:2.0.0@aar'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+//    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'org.jetbrains:annotations-java5:15.0'
 }

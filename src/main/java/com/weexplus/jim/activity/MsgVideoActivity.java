@@ -2,10 +2,11 @@ package com.weexplus.jim.activity;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.widget.MediaController;
 import android.widget.VideoView;
 
-import androidx.annotation.Nullable;
+//import androidx.annotation.Nullable;
 
 import com.weexplus.jim.R;
 import com.weexplus.jim.framework.base.BaseActivity;

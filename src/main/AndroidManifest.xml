@@ -11,12 +11,6 @@
         <activity android:name=".activity.MsgVideoActivity"/>
         <activity android:name=".activity.BrowserImageActivity" />
         <activity
-            android:name="com.weexplus.jim.view.Sample"
-            android:configChanges="keyboardHidden|orientation"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="stateHidden|adjustResize" />
-        <activity
             android:name="com.weexplus.jim.activity.ChatMsgActivity"
             android:windowSoftInputMode="adjustPan"/>
         <!-- Required SDK核心功能-->
@@ -50,13 +44,12 @@
 <!--         Required since JCore 1.1.7. SDK 核心功能-->
         <provider
             android:name="cn.jpush.android.service.DataProvider"
-            android:authorities="com.weexplus.jim.DataProvider"
-            android:exported="false"
-            tools:replace="android:authorities"/>
+            android:authorities="${applicationId}.DataProvider"
+            />
         <!-- Required since JMessage 2.7.0 SDK 核心功能-->
         <provider
             android:name="cn.jpush.im.android.helpers.ipc.IMProvider"
-            android:authorities="com.weexplus.jim.IMProvider"
+            android:authorities="${applicationId}.IMProvider"
             android:exported="false"
             tools:replace="android:authorities"/>
         <!-- Required JMessage SDK核心功能-->

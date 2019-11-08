@@ -20,8 +20,10 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
-import androidx.appcompat.widget.AppCompatImageView;
+import android.support.v7.widget.AppCompatImageView;
+//import androidx.appcompat.widget.AppCompatImageView;
 import android.util.AttributeSet;
+import android.widget.ImageView;
 
 public class PhotoView extends AppCompatImageView implements IPhotoView {
 
@@ -39,7 +41,7 @@ public class PhotoView extends AppCompatImageView implements IPhotoView {
 	
 	public PhotoView(boolean fromChatActivity, Context context, AttributeSet attr, int defStyle) {
 		super(context, attr, defStyle);
-		super.setScaleType(ScaleType.MATRIX);
+		super.setScaleType(ImageView.ScaleType.MATRIX);
 		mAttacher = new PhotoViewAttacher(this, fromChatActivity, context);
 
 		if (null != mPendingScaleType) {

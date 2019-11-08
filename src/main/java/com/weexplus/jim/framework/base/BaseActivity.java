@@ -7,14 +7,17 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 
-import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentActivity;
+//import androidx.annotation.Nullable;
+//import androidx.fragment.app.FragmentActivity;
 
 import com.bigkoo.svprogresshud.SVProgressHUD;
 
@@ -28,7 +31,7 @@ import com.weexplus.jim.R;
 import com.weexplus.jim.framework.helper.SharedPrefHelper;
 import com.weexplus.jim.framework.system.SystemStatusManager;
 
-import butterknife.ButterKnife;
+//import butterknife.ButterKnife;
 import cn.jpush.im.android.api.JMessageClient;
 import cn.jpush.im.android.api.event.LoginStateChangeEvent;
 
@@ -64,7 +67,7 @@ public abstract class BaseActivity extends FragmentActivity implements View.OnCl
 //        }
 
         setContentView(rootContentView());
-        ButterKnife.bind(this);
+//        ButterKnife.bind(this);
         new SystemStatusManager(this).setTranslucentStatus(R.drawable.shape_titlebar);
         JMessageClient.registerEventReceiver(this);
         mContext = BaseActivity.this;
@@ -155,6 +158,7 @@ public abstract class BaseActivity extends FragmentActivity implements View.OnCl
      * 关软件盘
      * @param activity
      */
+    @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
     protected void dismissKeyboard(Activity activity) {
         try {
             InputMethodManager inputMethodManage = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -170,6 +174,7 @@ public abstract class BaseActivity extends FragmentActivity implements View.OnCl
      * 显示软键盘
      * @param v
      */
+    @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
     public static void ShowKeyboard(View v) {
         InputMethodManager imm = (InputMethodManager) v.getContext()
                 .getSystemService(Context.INPUT_METHOD_SERVICE);

@@ -1,4 +1,4 @@
-package com.wapchief.jpushim.view;
+package com.weexplus.jim.view;
 
 import android.app.ProgressDialog;
 import android.content.Context;

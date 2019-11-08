@@ -24,6 +24,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -42,8 +44,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+//import androidx.annotation.NonNull;
+//import androidx.annotation.Nullable;
 
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
@@ -58,7 +60,7 @@ import com.farwolf.weex.view.LoadingDialog;
 import com.farwolf.weex.view.LoadingDialog_;
 import com.squareup.picasso.Picasso;
 import com.weexplus.jim.R;
-import com.weexplus.jim.R2;
+//import com.weexplus.jim.R2;
 import com.weexplus.jim.entity.DefaultUser;
 import com.weexplus.jim.entity.MyMessage;
 import com.weexplus.jim.entity.UserStateBean;
@@ -84,9 +86,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
+//import butterknife.BindView;
+//import butterknife.ButterKnife;
+//import butterknife.OnClick;
 import cn.jiguang.imui.chatinput.ChatInputView;
 import cn.jiguang.imui.chatinput.listener.OnCameraCallbackListener;
 import cn.jiguang.imui.chatinput.listener.OnMenuClickListener;
@@ -137,6 +139,7 @@ import static cn.jpush.im.android.api.enums.ContentType.prompt;
 import static cn.jpush.im.android.api.enums.ContentType.text;
 import static cn.jpush.im.android.api.enums.ContentType.video;
 import static cn.jpush.im.android.api.enums.ContentType.voice;
+import static cn.jpush.im.android.api.jmrtc.JMRTCInternalUse.getApplicationContext;
 
 
 public class ChatMsgActivity extends BaseActivity implements
@@ -148,22 +151,22 @@ public class ChatMsgActivity extends BaseActivity implements
     private final int RC_CAMERA = 0x0002;
     private final int RC_PHOTO = 0x0003;
 
-    @BindView(R2.id.title_bar_back)
+//    @BindView(R2.id.title_bar_back)
     ImageView mTitleBarBack;
-    @BindView(R2.id.title_bar_title)
+//    @BindView(R2.id.title_bar_title)
     TextView mTitleBarTitle;
-    @BindView(R2.id.title_options_tv)
+//    @BindView(R2.id.title_options_tv)
     TextView mTitleOptionsTv;
-    @BindView(R2.id.title_options_img)
+//    @BindView(R2.id.title_options_img)
     ImageView mTitleOptionsImg;
-
-    @BindView(R2.id.title)
+//
+//    @BindView(R2.id.title)
     LinearLayout mTitle;
-    @BindView(R2.id.msg_list)
+//    @BindView(R2.id.msg_list)
     MessageList mMsgList;
-    @BindView(R2.id.chat_input)
+//    @BindView(R2.id.chat_input)
     ChatInputView mChatInput;
-    @BindView(R2.id.chat_view)
+//    @BindView(R2.id.chat_view)
     ChatView mChatView;
 //    @BindView(R2.id.chat_et)
 //    EditText mChatEt;
@@ -225,8 +228,15 @@ public class ChatMsgActivity extends BaseActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // TODO: add setContentView(...) invocation
-        ButterKnife.bind(this);
+//        ButterKnife.bind(this);
+        mTitleBarBack = findViewById(R.id.title_bar_back);
+        mTitleBarTitle = findViewById(R.id.title_bar_title);
+        mTitleOptionsTv = findViewById(R.id.title_options_tv);
+        mTitleOptionsImg = findViewById(R.id.title_options_img);
+        mTitle = findViewById(R.id.title);
+        mMsgList = findViewById(R.id.msg_list);
+        mChatView = findViewById(R.id.chat_view);
+        mChatInput = findViewById(R.id.chat_input);
         chatPageBack();
     }
 
@@ -1074,10 +1084,8 @@ public class ChatMsgActivity extends BaseActivity implements
                 Glide.with(ChatMsgActivity.this)
                         .asBitmap()
                         .load(uri)
-                        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-                        .placeholder(R.drawable.api_loading_bg)
                         .apply(new RequestOptions().frame(interval).override(200,400))
-                        .error(R.drawable.aurora_preview_record_video_start)
+//                        .error(R.drawable.aurora_preview_record_video_start)
                         .into(imageCover);
             }
         };
@@ -1394,54 +1402,54 @@ public class ChatMsgActivity extends BaseActivity implements
         });
     }
 
-    @SuppressLint("InvalidR2Usage")
-//    @OnClick({R2.id.title_bar_back,R2.id.title_bar_title, R2.id.title_options_tv, R2.id.chat_send})
-    public void onViewClicked(View view) {
-        switch (view.getId()) {
-//            case R.id.title_bar_title:
-//                Intent intent = new Intent(mContext, UserInfoActivity.class);
-//                intent.putExtra("USERNAME", userName);
+//    @SuppressLint("InvalidR2Usage")
+////    @OnClick({R2.id.title_bar_back,R2.id.title_bar_title, R2.id.title_options_tv, R2.id.chat_send})
+//    public void onViewClicked(View view) {
+//        switch (view.getId()) {
+////            case R.id.title_bar_title:
+////                Intent intent = new Intent(mContext, UserInfoActivity.class);
+////                intent.putExtra("USERNAME", userName);
+////                break;
+//            case R.id.title_bar_back:
+//                finish();
+//                //重置会话未读
+//                conversation.resetUnreadCount();
 //                break;
-            case R2.id.title_bar_back:
-                finish();
-                //重置会话未读
-                conversation.resetUnreadCount();
-                break;
-            case R2.id.title_options_tv:
-                //
-                MyAlertDialog dialog = new MyAlertDialog(this, new String[]{"清空聊天记录", "清空并删除会话"}, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        switch (i) {
-                            case 0:
-                                showProgressDialog("正在删除聊天记录");
-                                if (conversation.deleteAllMessage()) {
-                                    mAdapter.clear();
-                                    mData.clear();
-                                    mAdapter.notifyDataSetChanged();
-                                    dismissProgressDialog();
-                                }
-
-                                break;
-                            case 1:
-                                showProgressDialog("正在删除");
-//                                if (JMessageClient.deleteSingleConversation(userName)) {
-//                                    startActivity(new Intent(ChatMsgActivity.this, MainActivity.class));
+//            case R.id.title_options_tv:
+//                //
+//                MyAlertDialog dialog = new MyAlertDialog(this, new String[]{"清空聊天记录", "清空并删除会话"}, new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialogInterface, int i) {
+//                        switch (i) {
+//                            case 0:
+//                                showProgressDialog("正在删除聊天记录");
+//                                if (conversation.deleteAllMessage()) {
+//                                    mAdapter.clear();
+//                                    mData.clear();
+//                                    mAdapter.notifyDataSetChanged();
+//                                    dismissProgressDialog();
 //                                }
-                                break;
-                        }
-                    }
-                });
-                dialog.initDialog(Gravity.RIGHT | Gravity.TOP);
-                dialog.dialogSize(200, 0, 0, 55);
-
-                break;
-//            case R2.id.chat_send:
-//                Log.d(TAG,"send: " + mChatEt.getText());
-//                sendMessage(mChatEt.getText().toString());
+//
+//                                break;
+//                            case 1:
+//                                showProgressDialog("正在删除");
+////                                if (JMessageClient.deleteSingleConversation(userName)) {
+////                                    startActivity(new Intent(ChatMsgActivity.this, MainActivity.class));
+////                                }
+//                                break;
+//                        }
+//                    }
+//                });
+//                dialog.initDialog(Gravity.RIGHT | Gravity.TOP);
+//                dialog.dialogSize(200, 0, 0, 55);
+//
 //                break;
-        }
-    }
+////            case R2.id.chat_send:
+////                Log.d(TAG,"send: " + mChatEt.getText());
+////                sendMessage(mChatEt.getText().toString());
+////                break;
+//        }
+//    }
 
 
 

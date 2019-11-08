@@ -28,7 +28,7 @@ public class JIMWeexModule extends WXModuleBase {
     //异步返回
 
     //注册账号
-    @JSMethod(uiThread = true)
+    @JSMethod(uiThread = false)
     public void register(String username, String password,final JSCallback callback) {
         JMessageClient.register(username, password, new BasicCallback() {
             @Override
@@ -42,7 +42,7 @@ public class JIMWeexModule extends WXModuleBase {
     }
 
     //登陆
-    @JSMethod(uiThread = true)
+    @JSMethod(uiThread = false)
     public void login(String username, String password, final JSCallback callback) {
         Log.i(TAG,username);
         JMessageClient.login(username, password, new BasicCallback() {
@@ -57,20 +57,19 @@ public class JIMWeexModule extends WXModuleBase {
         });
     }
 
-    @JSMethod
-    public void getOnlineStatus() {
-//        JMessageClient.
-    }
+//    @JSMethod
+//    public void getOnlineStatus() {
+//    }
 
     //获取JMessage的SDK版本
-    @JSMethod
+    @JSMethod(uiThread = false)
     public void getSDKVersion(JSCallback callback) {
         String version = JMessageClient.getSdkVersionString();
         callback.invoke(version);
     }
 
     //获取用户信息
-    @JSMethod
+    @JSMethod(uiThread = false)
     public void getUserInfo(String username, final JSCallback callback) {
         JMessageClient.getUserInfo(username, new GetUserInfoCallback() {
             @Override
@@ -86,7 +85,7 @@ public class JIMWeexModule extends WXModuleBase {
     }
 
     //跳转至聊天界面
-    @JSMethod (uiThread = true)
+    @JSMethod (uiThread = false)
     public void startChat(HashMap param) {
         String account = param.get("account") + "";
         String userName = param.get("userName") + "";
@@ -102,7 +101,7 @@ public class JIMWeexModule extends WXModuleBase {
     }
 
     //设置debug模式
-    @JSMethod (uiThread = true)
+    @JSMethod (uiThread = false)
     public void setDebugMode(boolean debug) {
         JMessageClient.setDebugMode(debug);
         Log.i(TAG, "setDebugMode:"+debug);
@@ -117,12 +116,12 @@ public class JIMWeexModule extends WXModuleBase {
      * @param text     文本内容
      * @return 消息对象
      */
-    @JSMethod (uiThread = true)
+    @JSMethod (uiThread = false)
     public void createSingleTextMsg(String username, String text, String appKey){
         JMessageClient.createSingleTextMessage(username,text);
     }
 
-    @JSMethod (uiThread = true)
+    @JSMethod (uiThread = false)
     public void getConversationList(JSCallback callback) {
         List<Conversation> list;
         list = JMessageClient.getConversationList();
@@ -133,10 +132,10 @@ public class JIMWeexModule extends WXModuleBase {
         }
     }
 
-    @JSMethod (uiThread = true)
-    public void createChatView() {
-        
-    }
+//    @JSMethod (uiThread = false)
+//    public void createChatView() {
+//
+//    }
 
     
 }

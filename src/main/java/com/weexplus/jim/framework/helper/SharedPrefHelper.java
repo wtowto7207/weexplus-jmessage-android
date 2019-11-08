@@ -1,14 +1,10 @@
 package com.weexplus.jim.framework.helper;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.common.WXModule;
-import com.weexplus.jim.framework.base.BaseApplication;
-import com.weexplus.jim.init.JIMInit;
 
 /**
  * Created by wapchief on 2017/7/14.
