@@ -31,7 +31,7 @@ import com.weexplus.jim.R;
 import com.weexplus.jim.framework.helper.SharedPrefHelper;
 import com.weexplus.jim.framework.system.SystemStatusManager;
 
-//import butterknife.ButterKnife;
+import butterknife.ButterKnife;
 import cn.jpush.im.android.api.JMessageClient;
 import cn.jpush.im.android.api.event.LoginStateChangeEvent;
 
@@ -56,7 +56,7 @@ public abstract class BaseActivity extends FragmentActivity implements View.OnCl
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        BarUtils.setNavBarImmersive(this);
+//        BarUtils.setNavBarImmersive(this);
 //        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
 //            try {
 //                Class decorViewClazz = Class.forName("com.android.internal.policy.DecorView");
@@ -66,14 +66,14 @@ public abstract class BaseActivity extends FragmentActivity implements View.OnCl
 //            } catch (Exception e) {}
 //        }
 
-        setContentView(rootContentView());
+//        setContentView(rootContentView());
 //        ButterKnife.bind(this);
-        new SystemStatusManager(this).setTranslucentStatus(R.drawable.shape_titlebar);
-        JMessageClient.registerEventReceiver(this);
+//        new SystemStatusManager(this).setTranslucentStatus(R.drawable.shape_titlebar);
+//        JMessageClient.registerEventReceiver(this);
         mContext = BaseActivity.this;
-        helper=SharedPrefHelper.getInstance();
-        initView();
-        initData();
+//        helper=SharedPrefHelper.getInstance();
+//        initView();
+//        initData();
     }
 
     @Override

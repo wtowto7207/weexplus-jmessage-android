@@ -1,6 +1,7 @@
 package com.weexplus.jim.module;
 
 import android.util.Log;
+import android.widget.Toast;
 
 import com.farwolf.weex.annotation.WeexModule;
 import com.farwolf.weex.base.WXModuleBase;
@@ -15,6 +16,7 @@ import cn.jpush.im.android.api.JMessageClient;
 import cn.jpush.im.android.api.callback.GetUserInfoCallback;
 import cn.jpush.im.android.api.model.Conversation;
 import cn.jpush.im.android.api.model.UserInfo;
+import cn.jpush.im.android.api.options.RegisterOptionalUserInfo;
 import cn.jpush.im.api.BasicCallback;
 
 //此注解将自动注册module到weex
@@ -29,13 +31,16 @@ public class JIMWeexModule extends WXModuleBase {
 
     //注册账号
     @JSMethod(uiThread = false)
-    public void register(String username, String password,final JSCallback callback) {
-        JMessageClient.register(username, password, new BasicCallback() {
+    public void register(String username, String password, String nikeName, final JSCallback callback) {
+        RegisterOptionalUserInfo registerOptionalUserInfo = new RegisterOptionalUserInfo();
+        registerOptionalUserInfo.setNickname(nikeName);
+        JMessageClient.register(username, password, registerOptionalUserInfo, new BasicCallback() {
             @Override
             public void gotResult(int i, String s) {
                 HashMap res = new HashMap();
                 res.put(CODE,i);
                 res.put(MESSAGE,s);
+                Log.i(TAG,"register" + s);
                 callback.invoke(res);
             }
         });
@@ -51,7 +56,7 @@ public class JIMWeexModule extends WXModuleBase {
                 HashMap res = new HashMap();
                 res.put(CODE,i);
                 res.put(MESSAGE,s);
-                Log.i(TAG,s);
+                Log.i(TAG,"login" + s);
                 callback.invoke(res);
             }
         });
@@ -89,7 +94,7 @@ public class JIMWeexModule extends WXModuleBase {
     public void startChat(HashMap param) {
         String account = param.get("account") + "";
         String userName = param.get("userName") + "";
-        String title = param.get("title") + "";
+        String title = param.get("nickName") + "";
         String msgID = param.get("msgID") + "";
         String position = param.get("position") + "";
 //        MessageListActivity.start(getContext(),account);
@@ -117,16 +122,33 @@ public class JIMWeexModule extends WXModuleBase {
      * @return 消息对象
      */
     @JSMethod (uiThread = false)
-    public void createSingleTextMsg(String username, String text, String appKey){
-        JMessageClient.createSingleTextMessage(username,text);
+    public void createSingleTextMsg(String username, String text, String appKey, JSCallback callback){
+        if (text != null && username != null) {
+            JMessageClient.createSingleTextMessage(username,text);
+        } else {
+            Toast.makeText(getContext(),"未设置聊天对象",Toast.LENGTH_SHORT).show();
+            callback.invoke("");
+        }
     }
 
     @JSMethod (uiThread = false)
-    public void getConversationList(JSCallback callback) {
+    public void getConversationList(String userName, JSCallback callback) {
+        Conversation list;
+        list = JMessageClient.getSingleConversation(userName);
+//        Log.d("chat_msg","single: " + list + " userName: " + userName);
+        if (list == null || list.getAllMessage().size() == 0) {
+            callback.invoke("暂无会话");
+        } else {
+            callback.invoke(list);
+        }
+    }
+
+    @JSMethod (uiThread = false)
+    public void getConversationAllList(JSCallback callback) {
         List<Conversation> list;
         list = JMessageClient.getConversationList();
         if (list.isEmpty()) {
-            callback.invoke("暂无会话");
+            callback.invoke(null);
         } else {
             callback.invoke(list);
         }

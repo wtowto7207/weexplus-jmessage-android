@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
-//apply plugin: 'com.jakewharton.butterknife'
+apply plugin: 'com.jakewharton.butterknife'
+//apply plugin:'android-apt'
 
 def AAVersion='4.5.2'
 def keystorePropertiesFile = rootProject.file("gradle.properties")
@@ -66,8 +67,8 @@ dependencies {
     api 'cn.jiguang.imui:messagelist:0.8.0'
     api 'cn.jiguang.imui:chatinput:0.10.0'
 
-//    api 'com.jakewharton:butterknife:9.0.0'
-//    annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0'
+    api 'com.jakewharton:butterknife:8.4.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
 
     //网络访问
     api 'com.squareup.retrofit2:retrofit:2.1.0'

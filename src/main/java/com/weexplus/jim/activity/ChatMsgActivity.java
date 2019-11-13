@@ -47,9 +47,11 @@ import android.widget.Toast;
 //import androidx.annotation.NonNull;
 //import androidx.annotation.Nullable;
 
+import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
@@ -68,6 +70,7 @@ import com.weexplus.jim.framework.base.BaseActivity;
 import com.weexplus.jim.framework.helper.SharedPrefHelper;
 import com.weexplus.jim.framework.messages.MessageListCus;
 import com.weexplus.jim.framework.network.NetWorkManager;
+import com.weexplus.jim.framework.system.SystemStatusManager;
 import com.weexplus.jim.framework.utils.RealPathFromUriUtils;
 import com.weexplus.jim.framework.utils.StringUtils;
 import com.weexplus.jim.framework.utils.TimeUtils;
@@ -86,9 +89,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-//import butterknife.BindView;
+import butterknife.BindView;
 //import butterknife.ButterKnife;
 //import butterknife.OnClick;
+import butterknife.ButterKnife;
 import cn.jiguang.imui.chatinput.ChatInputView;
 import cn.jiguang.imui.chatinput.listener.OnCameraCallbackListener;
 import cn.jiguang.imui.chatinput.listener.OnMenuClickListener;
@@ -188,6 +192,7 @@ public class ChatMsgActivity extends BaseActivity implements
     //收发的头像
     private ImageView imageAvatarSend, imageAvatarReceive;
     private String userName = "";
+    private String nickName = "";
     //撤回消息的视图msgid
     private String msgID = "";
     private int position;
@@ -215,11 +220,14 @@ public class ChatMsgActivity extends BaseActivity implements
         return R.layout.activity_chat;
     }
 
-    public static void start(Context context, String contactId, String userName, String title, String msgID,int position) {
+    public static void start(Context context, String contactId, String userName, String nickName, String msgID,int position) {
         Intent intent = new Intent();
         intent.setClass(context,ChatMsgActivity.class);
+        //传入用户账号
         intent.putExtra("USERNAME", userName);
-        intent.putExtra("NAKENAME", title);
+        //传入用户昵称
+        intent.putExtra("NICKNAME", nickName);
+        //聊天信息的ID
         intent.putExtra("MSGID",msgID);
         intent.putExtra("position",position);
         context.startActivity(intent);
@@ -228,6 +236,8 @@ public class ChatMsgActivity extends BaseActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        BarUtils.setNavBarImmersive(this);
+        setContentView(R.layout.activity_chat);
 //        ButterKnife.bind(this);
         mTitleBarBack = findViewById(R.id.title_bar_back);
         mTitleBarTitle = findViewById(R.id.title_bar_title);
@@ -237,10 +247,16 @@ public class ChatMsgActivity extends BaseActivity implements
         mMsgList = findViewById(R.id.msg_list);
         mChatView = findViewById(R.id.chat_view);
         mChatInput = findViewById(R.id.chat_input);
+        new SystemStatusManager(this).setTranslucentStatus(R.drawable.shape_titlebar);
+        JMessageClient.registerEventReceiver(this);
+        helper=SharedPrefHelper.getInstance();
+        initView();
+        initData();
+        //返回上一页
         chatPageBack();
     }
 
-    @Override
+//    @Override
     protected void initView() {
         this.mManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 //        editTextHeight();
@@ -261,15 +277,17 @@ public class ChatMsgActivity extends BaseActivity implements
         helper.setUserId(userInfo.getUserName());
         //注册接收者
         JMessageClient.registerEventReceiver(this);
-        conversations = JMessageClient.getConversationList();
-        Log.d(TAG,"conversation: " + conversations);
+//        Log.d(TAG,"conversation: " + conversations);
         userName = getIntent().getStringExtra("USERNAME");
+        nickName = getIntent().getStringExtra("NICKNAME");
+//        Log.d(TAG,"nickName: " + nickName);
         //消息界面关闭通知
         JMessageClient.enterSingleConversation(userName);
 //        msgID = getIntent().getStringExtra("MSGID");
         //position从上个页面传递的会话位置
         position = getIntent().getIntExtra("position", 0);
-        conversation = conversations.get(position);
+        conversation = JMessageClient.getSingleConversation(userName);
+//        conversation = conversations.get(position);
         View view = View.inflate(mContext, R.layout.item_receive_photo, null);
         View view1 = View.inflate(mContext, R.layout.item_send_photo, null);
         imageAvatarSend = (ImageView) view.findViewById(R.id.aurora_iv_msgitem_avatar);
@@ -281,10 +299,11 @@ public class ChatMsgActivity extends BaseActivity implements
             imgRecrive = StringUtils.isNull(conversation.getAvatarFile().toURI().toString()) ? "R.drawable.ironman" : conversation.getAvatarFile().toURI().toString();
 
         } catch (Exception e) {
+            Log.e(TAG,e + "");
         }
         mData = getMessages();
-        initTitleBar();
         initMsgAdapter();
+        initTitleBar(nickName);
 //        imageLoader.loadImage(imageAvatarSend, userInfo.getAvatarFile().toURI().toString());
         imageLoader.loadImage(imageAvatarReceive, imgRecrive);
         mTitleBarBack.setVisibility(View.VISIBLE);
@@ -409,7 +428,7 @@ public class ChatMsgActivity extends BaseActivity implements
         try {
 //            ImageContent content = new ImageContent(imageFile);
             Message message = conversation.createSendImageMessage(imageFile);
-            Log.d(TAG,"conversation message image: " + message);
+//            Log.d(TAG,"conversation message image: " + message);
             final MyMessage myMessage = new MyMessage(null, SEND_IMAGE);
             mPathList.add(uri);
             myMessage.setMessage(message);
@@ -417,7 +436,7 @@ public class ChatMsgActivity extends BaseActivity implements
             mMsgIdList.add(myMessage.getMsgId());
             myMessage.setTimeString(TimeUtils.ms2date("MM-dd HH:mm",message.getCreateTime()));
             myMessage.setMediaFilePath(uri);
-            myMessage.setUserInfo(new DefaultUser(userInfo.getUserName(),userInfo.getDisplayName(),imgSend));
+            myMessage.setUserInfo(new DefaultUser(JMessageClient.getMyInfo().getUserName(),userInfo.getDisplayName(),imgSend));
             loadingTipShow();
             message.setOnSendCompleteCallback(new BasicCallback() {
                 @Override
@@ -426,6 +445,7 @@ public class ChatMsgActivity extends BaseActivity implements
                         mAdapter.addToStart(myMessage,true);
                         loadingTipHide();
                     } else {
+                        loadingTipHide();
                         Log.e(TAG + "发送失败?", s);
                         Toast.makeText(mContext,"发送失败",Toast.LENGTH_LONG).show();
                     }
@@ -442,9 +462,6 @@ public class ChatMsgActivity extends BaseActivity implements
         File videoFile = new File(item.getFilePath());
         Bitmap bitmap = BitmapFactory.decodeFile(item.getFilePath());
         int duration = (int) ((VideoItem) item).getDuration();
-//        String fileName = item.getFileName().split("\\.")[0];
-//        String format = item.getFileName().split("\\.")[1];
-//        Log.e(TAG,"duration: " + format);
         try {
             VideoContent content = new VideoContent(bitmap,"png",videoFile,item.getFileName(),duration);
 //            content.setStringExtra(fileName,format);
@@ -452,8 +469,7 @@ public class ChatMsgActivity extends BaseActivity implements
             content.setNumberExtra("duration", duration);
             content.setStringExtra("video", "mp4");
             Message message = conversation.createSendMessage(content);
-//            Message message = JMessageClient.createSingleVideoMessage(userName,null,bitmap,format,videoFile,fileName,duration);
-            Log.d(TAG,"conversation message video: " + message);
+//            Log.d(TAG,"conversation message video: " + message);
             final MyMessage myMessage = new MyMessage(null,SEND_VIDEO);
             myMessage.setMessage(message);
             myMessage.setDuration(((VideoItem) item).getDuration());
@@ -468,6 +484,7 @@ public class ChatMsgActivity extends BaseActivity implements
                         mAdapter.addToStart(myMessage,true);
                         loadingTipHide();
                     } else {
+                        loadingTipHide();
                         Toast.makeText(mContext,"发送失败",Toast.LENGTH_LONG).show();
                     }
                 }
@@ -527,34 +544,14 @@ public class ChatMsgActivity extends BaseActivity implements
                 }
                 // should reset messageList height
                 mChatView.setMsgListHeight(true,ChatMsgActivity.this.getWindow().getDecorView().getRootView().getHeight());
-//                MyMessage message;
                 for (FileItem item : list) {
-//                    Log.d(TAG,"send : " + item.getFilePath());
                     if (item.getType() == FileItem.Type.Image) {
-//                        Log.d(TAG,"send image: " + item.getFilePath());
                         sendImage(item.getFilePath());
-//                        message = new MyMessage(null, IMessage.MessageType.SEND_IMAGE);
-//                        mPathList.add(item.getFilePath());
-//                        mMsgIdList.add(message.getMsgId());
                     } else if (item.getType() == FileItem.Type.Video) {
-//                        message = new MyMessage(null, IMessage.MessageType.SEND_VIDEO);
-//                        message.setDuration(((VideoItem) item).getDuration());
                         sendVideo(item);
                     } else {
                         throw new RuntimeException("Invalid FileItem type. Must be Type.Image or Type.Video");
                     }
-
-//                    message.setTimeString(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()));
-//                    message.setMediaFilePath(item.getFilePath());
-//                    Log.d(TAG,"image: " + item.getFilePath());
-//                    message.setUserInfo(new DefaultUser(String.valueOf(userInfo.getUserID()), userInfo.getDisplayName(), userInfo.getAvatar()));
-//                    final MyMessage fMsg = message;
-//                    ChatMsgActivity.this.runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            mAdapter.addToStart(fMsg, true);
-//                        }
-//                    });
                 }
             }
 
@@ -679,17 +676,12 @@ public class ChatMsgActivity extends BaseActivity implements
                 }
                 mChatView.setRecordVoiceFile(desDir.getPath(), DateFormat.format("yyyy-MM-dd-hhmmss",
                         Calendar.getInstance(Locale.CHINA)) + "");
-//                mChatInput.getRecordVoiceButton().setVoiceFilePath(fileDir, TimeUtils.date2ms(
-//                        Calendar.getInstance(Locale.CHINA)+"","yyyy_MMdd_hhmmss") + "");
             }
 
             @Override
             public void onFinishRecord(File file, int i) {
                 try {
-//                    FileContent content = new FileContent(file);
-//                    content.setStringExtra("voice","m4a");
                     Message message = conversation.createSendVoiceMessage(file,i);
-                    Log.d(TAG,"conversation message voice: " + message);
                     final MyMessage myMessage = new MyMessage(null, IMessage.MessageType.SEND_VOICE);
                     myMessage.setUserInfo(new DefaultUser(String.valueOf(userInfo.getUserID()), userInfo.getDisplayName(), userInfo.getAvatar()));
                     myMessage.setMediaFilePath(file.getPath());
@@ -703,6 +695,7 @@ public class ChatMsgActivity extends BaseActivity implements
                                 mAdapter.addToStart(myMessage, true);
                                 loadingTipHide();
                             } else {
+                                loadingTipHide();
                                 Toast.makeText(mContext,"发送失败",Toast.LENGTH_LONG).show();
                             }
                         }
@@ -739,17 +732,17 @@ public class ChatMsgActivity extends BaseActivity implements
 
     }
 
+    //相册点击获取照片的回调
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK) {
-            return;
+            Toast.makeText(mContext,"照片获取失败",Toast.LENGTH_SHORT).show();
         } else {
             if (requestCode == 1) {
                 if (data != null) {
                     String realPathFromUri = RealPathFromUriUtils.getRealPathFromUri(mContext,data.getData());
                     sendImage(realPathFromUri);
-//                    Log.d(TAG,"realPathFromUri: " + realPathFromUri);
                 } else {
                     Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
                 }
@@ -761,18 +754,16 @@ public class ChatMsgActivity extends BaseActivity implements
     //初始化消息列表
     private List<MyMessage> getMessages() {
         list = new ArrayList<>();
-//        Log.d(TAG,"last message: " + conversation.getLatestMessage());
         for (int i = 0; i < conversation.getAllMessage().size(); i++) {
             MyMessage message;
+            ContentType type = conversation.getAllMessage().get(i).getContentType();
             //根据消息判断接收方或者发送方类型
             if (conversation.getAllMessage().get(i).getDirect() == MessageDirect.send) {
                 //判断消息是否撤回
                 if (conversation.getAllMessage().get(i).getContent().getContentType().equals(prompt)) {
                     message = new MyMessage(((PromptContent) conversation.getAllMessage().get(i).getContent()).getPromptText(), SEND_TEXT);
                 } else {
-                    ContentType type = conversation.getAllMessage().get(i).getContentType();
                     if ( type == video) {
-//                        Log.d(TAG,"video path: " + ((VideoContent) conversation.getAllMessage().get(i).getContent()).getVideoLocalPath());
                         message = new MyMessage(((VideoContent) conversation.getAllMessage().get(i).getContent()).getVideoLocalPath(), SEND_VIDEO);
                         message.setMessage(conversation.getAllMessage().get(i));
                         message.setMediaFilePath(((VideoContent) conversation.getAllMessage().get(i).getContent()).getVideoLocalPath());
@@ -782,11 +773,8 @@ public class ChatMsgActivity extends BaseActivity implements
                         mPathList.add(message.getMediaFilePath());
                         mMsgIdList.add(String.valueOf(message.getId()));
                     } else if (type == file) {
-//                        Log.d(TAG,"file");
-//                        Log.d(TAG,"file: " + ((VideoContent) conversation.getAllMessage().get(i).getContent()).getVideoLocalPath());
                         message = new MyMessage(((FileContent) conversation.getAllMessage().get(i).getContent()).getLocalPath(), SEND_VIDEO);
                         message.setMediaFilePath(((FileContent) conversation.getAllMessage().get(i).getContent()).getLocalPath());
-//                        message.setDuration(conversation.getAllMessage().get(i).getContent().getNumberExtra("duration").longValue());
                     } else if (type == voice) {
                         message = new MyMessage(((VoiceContent) conversation.getAllMessage().get(i).getContent()).getLocalPath(), SEND_VOICE);
                         message.setMediaFilePath(((VoiceContent) conversation.getAllMessage().get(i).getContent()).getLocalPath());
@@ -795,46 +783,39 @@ public class ChatMsgActivity extends BaseActivity implements
                         message = new MyMessage(((TextContent) conversation.getAllMessage().get(i).getContent()).getText(), SEND_TEXT);
                     }
                 }
-//                Log.e(TAG + "conversationT", ":" + conversation.getAllMessage().get(i).getContent().getContentType());
                 message.setUserInfo(new DefaultUser(userName, userInfo.getDisplayName(), (StringUtils.isNull(imgSend)) ? "R.drawable.ironman" : imgSend));
             } else {
                 //判断消息是否撤回
                 if (conversation.getAllMessage().get(i).getContent().getContentType().equals(prompt)) {
                     message = new MyMessage(((PromptContent) conversation.getAllMessage().get(i).getContent()).getPromptText(), IMessage.MessageType.RECEIVE_TEXT);
                 } else {
-                    switch (conversation.getAllMessage().get(i).getContentType()) {
+                    switch (type) {
                         case video:
                             message = new MyMessage(((VideoContent) conversation.getAllMessage().get(i).getContent()).getVideoLocalPath(), IMessage.MessageType.RECEIVE_VIDEO);
                             message.setMessage(conversation.getAllMessage().get(i));
                             message.setMediaFilePath(((VideoContent) conversation.getAllMessage().get(i).getContent()).getVideoLocalPath());
                             message.setDuration(((VideoContent) conversation.getAllMessage().get(i).getContent()).getDuration());
-//                            Log.d(TAG,"init video receive path: " + message.getMediaFilePath());
                             break;
                         case image:
                             message = new MyMessage(((ImageContent) conversation.getAllMessage().get(i).getContent()).getLocalThumbnailPath(), IMessage.MessageType.RECEIVE_IMAGE);
-//                            Log.d(TAG,"message list init image: " + message);
                             mPathList.add(message.getMediaFilePath());
                             mMsgIdList.add(String.valueOf(message.getId()));
-//                            Log.d(TAG,"receive image: " + message.getMediaFilePath());
                             break;
                         case file:
                             message = new MyMessage(((FileContent) conversation.getAllMessage().get(i).getContent()).getLocalPath(), RECEIVE_VIDEO);
                             message.setMediaFilePath(((FileContent) conversation.getAllMessage().get(i).getContent()).getLocalPath());
-//                            message.setDuration(Integer.valueOf(((FileContent) conversation.getAllMessage().get(i).getContent()).getStringExtra("duration")));
-//                            Log.d(TAG,"init file receive path: " + conversation.getAllMessage().get(i));
                             break;
                         case voice:
                             message = new MyMessage(((VoiceContent) conversation.getAllMessage().get(i).getContent()).getLocalPath(), RECEIVE_VOICE);
                             message.setMediaFilePath(((VoiceContent) conversation.getAllMessage().get(i).getContent()).getLocalPath());
                             message.setDuration(((VoiceContent) conversation.getAllMessage().get(i).getContent()).getDuration());
-//                            Log.d(TAG,"init voice receive path: " + conversation.getAllMessage().get(i));
                             break;
                          default:
                             message = new MyMessage(((TextContent) conversation.getAllMessage().get(i).getContent()).getText(), IMessage.MessageType.RECEIVE_TEXT);
                             break;
                     }
                 }
-                message.setUserInfo(new DefaultUser(JMessageClient.getMyInfo().getUserName(), userName, (StringUtils.isNull(imgRecrive)) ? "R.drawable.ironman" : imgRecrive));
+                message.setUserInfo(new DefaultUser(JMessageClient.getMyInfo().getUserName(), nickName, (StringUtils.isNull(imgRecrive)) ? "R.drawable.ironman" : imgRecrive));
 
             }
             message.setPosition(i);
@@ -842,7 +823,6 @@ public class ChatMsgActivity extends BaseActivity implements
             message.setMsgID(conversation.getAllMessage().get(i).getServerMessageId());
             message.setTimeString(TimeUtils.ms2date("MM-dd HH:mm", conversation.getAllMessage().get(i).getCreateTime()));
             list.add(message);
-//            Log.d(TAG,"conversation.getAllMessage().get(i).getServerMessageId(): " + conversation.getAllMessage().get(i).getServerMessageId());
         }
         Collections.reverse(list);
         conversation.resetUnreadCount();
@@ -863,10 +843,8 @@ public class ChatMsgActivity extends BaseActivity implements
             @Override
             public void run() {
                 //创建一个消息对象
-//                Log.d(TAG,"type: " + message.getContentType());
                 switch (message.getContentType()) {
                     case image:
-//                        Log.d(TAG,"image receive: " + message);
                         myMessage = new MyMessage(((ImageContent) message.getContent()).getLocalThumbnailPath(), IMessage.MessageType.RECEIVE_IMAGE);
                         myMessage.setMediaFilePath(((ImageContent) message.getContent()).getLocalThumbnailPath());
                         mPathList.add(myMessage.getMediaFilePath());
@@ -885,7 +863,6 @@ public class ChatMsgActivity extends BaseActivity implements
                                         if (i == 0) {
                                             myMessage.setMediaFilePath(file.getPath());
                                             JMessageClient.sendMessage(message);
-//                                            Log.d(TAG,"download video: " + myMessage);
                                             Log.d(TAG,"video receive: " + ((VideoContent) message.getContent()).getDuration());
                                         } else {
                                             Toast.makeText(mContext,"视频下载失败",Toast.LENGTH_SHORT).show();
@@ -896,16 +873,12 @@ public class ChatMsgActivity extends BaseActivity implements
                                 Log.e(TAG,e + "");
                             }
                         }
-//                        Log.d(TAG,"file receive: " + message);
-//                        myMessage.setMediaFilePath(((VideoContent) message.getContent()).getVideoLocalPath());
-//                        myMessage.setDuration(((VideoContent) message.getContent()).getDuration());
                         break;
                     case file:
                         myMessage = new MyMessage(((FileContent) message.getContent()).getLocalPath(),RECEIVE_VIDEO);
                         if (myMessage.getMediaFilePath() == null) {
                             try {
                                 final FileContent fileContent = (FileContent) message.getContent();
-//                                final VideoContent videoContent = new VideoContent(null,null,new File(((FileContent) message.getContent()).getLocalPath()),((FileContent) message.getContent()).getFileName(),((FileContent) message.getContent()).getNumberExtra("duration").intValue());
                                 fileContent.downloadFile(message, new DownloadCompletionCallback() {
                                     @Override
                                     public void onComplete(int i, String s, File file) {
@@ -914,7 +887,6 @@ public class ChatMsgActivity extends BaseActivity implements
                                             myMessage.setMediaFilePath(file.getPath());
                                             myMessage.setDuration(message.getContent().getNumberExtra("duration").longValue());
                                             JMessageClient.sendMessage(message);
-//                                            Log.d(TAG,"download file: " + myMessage);
                                         } else {
                                             Toast.makeText(mContext,"文件下载失败",Toast.LENGTH_SHORT).show();
                                         }
@@ -924,13 +896,11 @@ public class ChatMsgActivity extends BaseActivity implements
                                 Log.e(TAG,e + "");
                             }
                         }
-//                        Log.d(TAG,"file receive: " + message);
                         break;
                     case voice:
                         myMessage = new MyMessage(((VoiceContent) message.getContent()).getLocalPath(),IMessage.MessageType.RECEIVE_VOICE);
                         myMessage.setMediaFilePath(((VoiceContent) message.getContent()).getLocalPath());
                         myMessage.setDuration(((VoiceContent) message.getContent()).getDuration());
-//                        Log.d(TAG,"voice receive: " + message);
                         break;
                     default:
                         myMessage = new MyMessage(((TextContent) message.getContent()).getText(), IMessage.MessageType.RECEIVE_TEXT);
@@ -940,7 +910,7 @@ public class ChatMsgActivity extends BaseActivity implements
                 myMessage.setMessage(message);
                 myMessage.setMsgID(message.getServerMessageId());
                 myMessage.setTimeString(TimeUtils.ms2date("MM-dd HH:mm", message.getCreateTime()));
-                myMessage.setUserInfo(new DefaultUser(JMessageClient.getMyInfo().getUserName(), userName, imgRecrive));
+                myMessage.setUserInfo(new DefaultUser(JMessageClient.getMyInfo().getUserName(), nickName, imgRecrive));
 
 //                if (message.getContentType() == ContentType.text || message.getContentType().equals("text")) {
                 mAdapter.addToStart(myMessage, true);
@@ -948,7 +918,6 @@ public class ChatMsgActivity extends BaseActivity implements
 //                }
                 //收到消息时，添加到集合
                 list.add(myMessage);
-//                Log.d(TAG,"list receive: " + list);
             }
 
         });
@@ -962,10 +931,8 @@ public class ChatMsgActivity extends BaseActivity implements
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-//                Log.e(TAG + "dataSize", mData.size() + "," + list.size());
                 if (list != null && list.size() > 0) {
                     for (int i = 0; i < list.size(); i++) {
-//                    Log.e(TAG + "messageRetract", "message:" + message + "\nMymessage:" + list.get(i));
                         if (list.get(i).getMsgID() == message.getServerMessageId()) {
                             mAdapter.delete(list.get(i));
                             MyMessage message1 = new MyMessage("[对方撤回了一条消息]", IMessage.MessageType.RECEIVE_TEXT);
@@ -1001,7 +968,6 @@ public class ChatMsgActivity extends BaseActivity implements
         imageLoader = new ImageLoader() {
             @Override
             public void loadAvatarImage(ImageView imageView, String s) {
-//                Log.d(TAG,"imgAvatarPath: " + s);
                 Picasso.with(getApplication())
                         .load(s)
                         .placeholder(R.drawable.icon_user)
@@ -1021,8 +987,6 @@ public class ChatMsgActivity extends BaseActivity implements
                             public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                                 int imageWidth = resource.getWidth();
                                 int imageHeight = resource.getHeight();
-
-
                                 //裁剪bitmap
                                 float width,height;
                                 if (imageWidth > imageHeight) {
@@ -1071,10 +1035,6 @@ public class ChatMsgActivity extends BaseActivity implements
                                 imageView.setImageBitmap(Bitmap.createBitmap(resource,0,0,imageWidth,imageHeight,matrix,true));
                             }
                         });
-//                Picasso.with(getApplication())
-//                        .load(s)
-//                        .placeholder(R.drawable.arrow_up)
-//                        .into(imageView);
             }
 
             @Override
@@ -1084,8 +1044,11 @@ public class ChatMsgActivity extends BaseActivity implements
                 Glide.with(ChatMsgActivity.this)
                         .asBitmap()
                         .load(uri)
-                        .apply(new RequestOptions().frame(interval).override(200,400))
-//                        .error(R.drawable.aurora_preview_record_video_start)
+                        .apply(new RequestOptions()
+                                .frame(interval)
+                                .override(200,400)
+                                .error(R.drawable.aurora_preview_record_video_start))
+//                        .error(R.drawable.aurora_preview_record_video)
                         .into(imageCover);
             }
         };
@@ -1107,9 +1070,6 @@ public class ChatMsgActivity extends BaseActivity implements
          * 3、ImageLoader 的实例，用来展示头像。如果为空，将会隐藏头像。
          */
         final MsgListAdapter.HoldersConfig holdersConfig = new MsgListAdapter.HoldersConfig();
-//
-//        holdersConfig.setSenderTxtMsg(MyTexViewHolder.class,R.layout.item_msglist_send);
-//        holdersConfig.setReceiverTxtMsg(MyTexViewHolder.class,R.layout.item_msglist_send);
         mAdapter = new MsgListAdapter<MyMessage>(helper.getUserId(), holdersConfig, imageLoader);
         //单击消息事件，可以选择查看大图或者播放视频
         mAdapter.setOnMsgClickListener(new MsgListAdapter.OnMsgClickListener<MyMessage>() {
@@ -1145,15 +1105,8 @@ public class ChatMsgActivity extends BaseActivity implements
         mAdapter.setMsgLongClickListener(new MsgListAdapter.OnMsgLongClickListener<MyMessage>() {
             @Override
             public void onMessageLongClick(View view,final MyMessage message) {
-//                Log.e("mymessage", "id:" + mMsgList.getId()
-//                        + "\nposition:" + message.getPosition()
-//                        + "\ntype:" + message.getType()
-//                        + "\nmessage:"+message.getMessage()
-//                +"\nMsgId:"+message.getMsgId());
                 String[] strings;
                 msgID = message.getMsgId();
-//                Log.d(TAG+ "msgIDLong", msgID);
-//                Log.d(TAG,"long message: " + message);
 
                 //判断消息类型
                 if (message.getType() == SEND_TEXT.ordinal()
@@ -1165,8 +1118,8 @@ public class ChatMsgActivity extends BaseActivity implements
                     strings = new String[]{"复制", "撤回"};
 //                    , "转发", "删除"
                 } else {
-                    strings = new String[]{"复制", "转发"};
-//                    , "删除"
+                    strings = new String[]{"复制"};
+//                    , "删除", "转发"
                 }
                 final MyAlertDialog dialog = new MyAlertDialog(ChatMsgActivity.this,
                         strings
@@ -1205,11 +1158,7 @@ public class ChatMsgActivity extends BaseActivity implements
                                         if (i == 0) {
                                             showToast(ChatMsgActivity.this, "撤回了一条消息");
                                             mAdapter.deleteById(message.getMsgId());
-//                                            MyMessage myMessage = new MyMessage("", SEND_TEXT);
-//                                            message.setTimeString("[你撤回了一条消息]");
-//                                            mAdapter.addToStart(message,false);
                                             mAdapter.updateMessage(message);
-//                                            mAdapter.notifyDataSetChanged();
                                         } else {
                                             showToast(ChatMsgActivity.this, "撤回失败：" + s);
                                         }
@@ -1220,7 +1169,6 @@ public class ChatMsgActivity extends BaseActivity implements
                                 //转发
                                 break;
                             default:
-//                                Log.e(TAG + "msgIDdelect", message.getMsgId());
                                 //2\从本地删除
                                 conversation.deleteMessage(Integer.valueOf(message.getMsgId()));
                                 //移除视图
@@ -1237,23 +1185,6 @@ public class ChatMsgActivity extends BaseActivity implements
 
 
         });
-
-        //点击头像
-//        mAdapter.setOnAvatarClickListener(new MsgListAdapter.OnAvatarClickListener<MyMessage>() {
-//            @Override
-//            public void onAvatarClick(MyMessage message) {
-//                DefaultUser userInfo = (DefaultUser) message.getFromUser();
-//                Intent intent;
-//                if (message.getType() == SEND_TEXT) {
-//                    intent = new Intent(mContext, UserActivty.class);
-//                } else {
-//                    intent = new Intent(mContext, UserInfoActivity.class);
-//                    intent.putExtra("USERNAME", userName);
-//                }
-//                Log.e("userName", userInfo + "\n" + userName);
-//                startActivity(intent);
-//            }
-//        });
 
         //重新发送
 //        mAdapter.setMsgResendListener(new MsgListAdapter.OnMsgResendListener<MyMessage>() {
@@ -1378,12 +1309,12 @@ public class ChatMsgActivity extends BaseActivity implements
     }
 
     /*标题栏*/
-    private void initTitleBar() {
+    private void initTitleBar(String nickName) {
         mTitleBarBack.setVisibility(View.INVISIBLE);
         mTitleBarBack.setImageDrawable(getResources().getDrawable(R.mipmap.icon_back));
         mTitleOptionsImg.setVisibility(View.GONE);
         mTitleOptionsTv.setVisibility(View.VISIBLE);
-        mTitleBarTitle.setText(userName);
+        mTitleBarTitle.setText(nickName);
     }
 
     @Override
@@ -1466,15 +1397,14 @@ public class ChatMsgActivity extends BaseActivity implements
                     } else {
                         state = "[离线]";
                     }
-                    mTitleBarTitle.setText(userName + state);
+                    mTitleBarTitle.setText(nickName + state);
                 } else {
-                    mTitleBarTitle.setText(userName);
+                    mTitleBarTitle.setText(nickName);
                 }
             }
 
             @Override
             public void onFailure(Call<UserStateBean> call, Throwable throwable) {
-//                LogUtils.e(throwable.getMessage()+".");
             }
         });
 
