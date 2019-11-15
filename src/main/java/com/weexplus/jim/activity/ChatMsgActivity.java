@@ -63,6 +63,7 @@ import com.farwolf.weex.view.LoadingDialog_;
 import com.squareup.picasso.Picasso;
 import com.weexplus.jim.R;
 //import com.weexplus.jim.R2;
+import com.weexplus.jim.Receiver.NotificationClickEventReceiver;
 import com.weexplus.jim.entity.DefaultUser;
 import com.weexplus.jim.entity.MyMessage;
 import com.weexplus.jim.entity.UserStateBean;
@@ -89,10 +90,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import butterknife.BindView;
 //import butterknife.ButterKnife;
 //import butterknife.OnClick;
-import butterknife.ButterKnife;
 import cn.jiguang.imui.chatinput.ChatInputView;
 import cn.jiguang.imui.chatinput.listener.OnCameraCallbackListener;
 import cn.jiguang.imui.chatinput.listener.OnMenuClickListener;
@@ -117,6 +116,7 @@ import cn.jpush.im.android.api.enums.ContentType;
 import cn.jpush.im.android.api.enums.MessageDirect;
 import cn.jpush.im.android.api.event.MessageEvent;
 import cn.jpush.im.android.api.event.MessageRetractEvent;
+import cn.jpush.im.android.api.event.NotificationClickEvent;
 import cn.jpush.im.android.api.model.Conversation;
 import cn.jpush.im.android.api.model.Message;
 import cn.jpush.im.android.api.model.UserInfo;
@@ -233,12 +233,28 @@ public class ChatMsgActivity extends BaseActivity implements
         context.startActivity(intent);
     }
 
+    /*点击通知栏跳转*/
+//    public void onEvent(NotificationClickEvent event){
+//        Log.d(TAG,"notification click");
+//        final Message msg = event.getMessage();
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                Intent notificationIntent = new Intent(mContext, ChatMsgActivity.class);
+//                notificationIntent.putExtra("USERNAME", msg.getFromUser().getUserName());
+//                notificationIntent.putExtra("NICKNAME", msg.getFromUser().getDisplayName());
+//                notificationIntent.putExtra("MSGID","");
+//                notificationIntent.putExtra("position",0);
+//                mContext.startActivity(notificationIntent);
+//            }
+//        });
+//    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         BarUtils.setNavBarImmersive(this);
         setContentView(R.layout.activity_chat);
-//        ButterKnife.bind(this);
         mTitleBarBack = findViewById(R.id.title_bar_back);
         mTitleBarTitle = findViewById(R.id.title_bar_title);
         mTitleOptionsTv = findViewById(R.id.title_options_tv);
@@ -248,8 +264,8 @@ public class ChatMsgActivity extends BaseActivity implements
         mChatView = findViewById(R.id.chat_view);
         mChatInput = findViewById(R.id.chat_input);
         new SystemStatusManager(this).setTranslucentStatus(R.drawable.shape_titlebar);
-        JMessageClient.registerEventReceiver(this);
-        helper=SharedPrefHelper.getInstance();
+//        JMessageClient.registerEventReceiver(this);
+//        helper=SharedPrefHelper.getInstance();
         initView();
         initData();
         //返回上一页
@@ -272,22 +288,19 @@ public class ChatMsgActivity extends BaseActivity implements
         helper = new SharedPrefHelper(this);
         mContext = ChatMsgActivity.this;
         userInfo = JMessageClient.getMyInfo();
-//        Log.d(TAG,"helper:" + helper);
-//        Log.d(TAG,"userInfo:" + userInfo.getUserName());
         helper.setUserId(userInfo.getUserName());
         //注册接收者
         JMessageClient.registerEventReceiver(this);
-//        Log.d(TAG,"conversation: " + conversations);
         userName = getIntent().getStringExtra("USERNAME");
         nickName = getIntent().getStringExtra("NICKNAME");
-//        Log.d(TAG,"nickName: " + nickName);
         //消息界面关闭通知
         JMessageClient.enterSingleConversation(userName);
-//        msgID = getIntent().getStringExtra("MSGID");
+        JMessageClient.setNotificationFlag(JMessageClient.FLAG_NOTIFY_WITH_SOUND | JMessageClient.FLAG_NOTIFY_WITH_LED | JMessageClient.FLAG_NOTIFY_WITH_VIBRATE);
+        //注册通知栏点击事件
+        new NotificationClickEventReceiver(mContext);
         //position从上个页面传递的会话位置
         position = getIntent().getIntExtra("position", 0);
         conversation = JMessageClient.getSingleConversation(userName);
-//        conversation = conversations.get(position);
         View view = View.inflate(mContext, R.layout.item_receive_photo, null);
         View view1 = View.inflate(mContext, R.layout.item_send_photo, null);
         imageAvatarSend = (ImageView) view.findViewById(R.id.aurora_iv_msgitem_avatar);
@@ -511,7 +524,7 @@ public class ChatMsgActivity extends BaseActivity implements
         process.txt.setText("上传中");
         freeDialog.show();
     }
-
+    //隐藏加载提示
     private void loadingTipHide() {
         if (freeDialog == null || !freeDialog.isShowing()) {
             return;
@@ -527,8 +540,6 @@ public class ChatMsgActivity extends BaseActivity implements
             public boolean onSendTextMessage(CharSequence charSequence) {
                 scrollToBottom();
                 if (charSequence.length() == 0) {
-//                    Toast.makeText(mContext,"请输入内容再发送",Toast.LENGTH_LONG).show();
-//                    return false;
                 } else {
                     sendMessage(charSequence.toString());
                 }
@@ -538,7 +549,6 @@ public class ChatMsgActivity extends BaseActivity implements
             @Override
             public void onSendFiles(List<FileItem> list) {
                 scrollToBottom();
-//                Log.d(TAG,"send file: " + list);
                 if (list == null || list.isEmpty()) {
                     return;
                 }
@@ -574,14 +584,14 @@ public class ChatMsgActivity extends BaseActivity implements
             @Override
             public boolean switchToGalleryMode() {
                 scrollToBottom();
-                String[] parms = new String[] {
+                String[] params = new String[] {
                         Manifest.permission.READ_EXTERNAL_STORAGE
                 };
-                if (!EasyPermissions.hasPermissions(ChatMsgActivity.this,parms)) {
+                if (!EasyPermissions.hasPermissions(ChatMsgActivity.this,params)) {
                     EasyPermissions.requestPermissions(ChatMsgActivity.this,
                             "需要获取照片的权限",
                             RC_PHOTO,
-                            parms);
+                            params);
                 }
                 mChatView.getChatInputView().getSelectPhotoView().updateData();
                 return true;
@@ -629,8 +639,6 @@ public class ChatMsgActivity extends BaseActivity implements
         mChatInput.getSelectAlbumBtn().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Toast.makeText(ChatMsgActivity.this, "OnClick select album button",
-//                        Toast.LENGTH_SHORT).show();
                 Intent galleryIntent=new Intent(Intent.ACTION_GET_CONTENT);
                 galleryIntent.addCategory(Intent.CATEGORY_OPENABLE);
                 galleryIntent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,"image/*");
@@ -863,7 +871,7 @@ public class ChatMsgActivity extends BaseActivity implements
                                         if (i == 0) {
                                             myMessage.setMediaFilePath(file.getPath());
                                             JMessageClient.sendMessage(message);
-                                            Log.d(TAG,"video receive: " + ((VideoContent) message.getContent()).getDuration());
+//                                            Log.d(TAG,"video receive: " + ((VideoContent) message.getContent()).getDuration());
                                         } else {
                                             Toast.makeText(mContext,"视频下载失败",Toast.LENGTH_SHORT).show();
                                         }
@@ -976,7 +984,6 @@ public class ChatMsgActivity extends BaseActivity implements
 
             @Override
             public void loadImage(final ImageView imageView, String s) {
-//                Log.d(TAG,"imgPath: " + s);
                 //缩略图
                 Glide.with(getApplicationContext())
                         .asBitmap()
@@ -1039,7 +1046,6 @@ public class ChatMsgActivity extends BaseActivity implements
 
             @Override
             public void loadVideo(ImageView imageCover, String uri) {
-//                Log.d(TAG,"loadvideo imageCover: " + imageCover);
                 long interval = 5000 * 1000;
                 Glide.with(ChatMsgActivity.this)
                         .asBitmap()
@@ -1048,7 +1054,6 @@ public class ChatMsgActivity extends BaseActivity implements
                                 .frame(interval)
                                 .override(200,400)
                                 .error(R.drawable.aurora_preview_record_video_start))
-//                        .error(R.drawable.aurora_preview_record_video)
                         .into(imageCover);
             }
         };
@@ -1076,7 +1081,7 @@ public class ChatMsgActivity extends BaseActivity implements
             @Override
             public void onMessageClick(MyMessage message) {
                 // do something
-                Log.d(TAG,"click video: " + message.getMediaFilePath());
+//                Log.d(TAG,"click video: " + message.getMediaFilePath());
                 if (message.getType() == IMessage.MessageType.RECEIVE_VIDEO.ordinal()
                         || message.getType() == IMessage.MessageType.SEND_VIDEO.ordinal()) {
 
@@ -1089,7 +1094,6 @@ public class ChatMsgActivity extends BaseActivity implements
                     || message.getType() == SEND_IMAGE.ordinal()){
                     if (!TextUtils.isEmpty(message.getMediaFilePath())) {
                         Intent intent = new Intent(mContext, BrowserImageActivity.class);
-//                        Log.d(TAG,"put params: msgId:  " + message.getId()+ "  mMsgList: " + mMsgIdList);
                         intent.putExtra("id",String.valueOf(message.getId()));
                         intent.putStringArrayListExtra("pathList", mPathList);
                         intent.putStringArrayListExtra("idList", mMsgIdList);
